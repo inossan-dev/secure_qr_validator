@@ -34,15 +34,35 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   QRViewController? controller;
   String scanResultEncoded = '';
   String scanResultDecoded = '';
 
+  // Configuration state
+  late TextEditingController secretKeyController;
+  bool enableEncryption = true;
+  bool enableSignature = true;
+  int validityDuration = 60;
+
+  // Configuration
+  late ValidatorConfig validatorConfig;
+  late SecureQRValidator validator;
+
   @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
+  void initState() {
+    secretKeyController = TextEditingController(text: '2024#@#qrcod#orange@##perform#==');
+    updateValidator();
+    super.initState();
+  }
+
+  void updateValidator() {
+    validatorConfig = ValidatorConfig(
+      secretKey: secretKeyController.text,
+      enableEncryption: enableEncryption,
+      enableSignature: enableSignature,
+      validityDuration: Duration(seconds: validityDuration),
+    );
+    validator = SecureQRValidator(validatorConfig);
   }
 
   @override
@@ -54,85 +74,96 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Expanded(
-            child: QRView(
-              key: GlobalKey(debugLabel: 'QR'),
-              onQRViewCreated: onQRViewCreated,
-              formatsAllowed: const [BarcodeFormat.qrcode],
-              overlay: QrScannerOverlayShape(
-                borderColor: Colors.deepOrangeAccent,
-                borderRadius: 20,
-                borderLength: 40,
-                borderWidth: 20,
-                overlayColor: Colors.grey,
-                cutOutSize: scanArea,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: secretKeyController,
+                    decoration: const InputDecoration(labelText: 'Clé secrète AES-256 (optionnel)'),
+                    onChanged: (_) => updateValidator(),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Chiffrement (optionnel)'),
+                    value: enableEncryption,
+                    onChanged: (value) {
+                      setState(() {
+                        enableEncryption = value;
+                        updateValidator();
+                      });
+                    },
+                  ),
+                  SwitchListTile(
+                    title: const Text('Signature (optionnel)'),
+                    value: enableSignature,
+                    onChanged: (value) {
+                      setState(() {
+                        enableSignature = value;
+                        updateValidator();
+                      });
+                    },
+                  ),
+                  Text('Durée de validité ($validityDuration sécondes)'),
+                  Slider(
+                    value: validityDuration.toDouble(),
+                    min: 10,
+                    max: 300,
+                    divisions: 29,
+                    label: '$validityDuration secondes',
+                    onChanged: (value) {
+                      setState(() {
+                        validityDuration = value.toInt();
+                        updateValidator();
+                      });
+                    },
+                  ),
+                ],
               ),
-              onPermissionSet: (ctrl, p) =>
-                  onPermissionSet(context, ctrl, p),
             ),
-          ),
-          Container(
-            height: MediaQuery.of(context).size.height * 0.35,
-            width: double.maxFinite,
-            padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              color: Colors.white,
+
+            // Scanner
+            SizedBox(
+              height: 250,
+              child: QRView(
+                key: GlobalKey(debugLabel: 'QR'),
+                onQRViewCreated: onQRViewCreated,
+                formatsAllowed: const [BarcodeFormat.qrcode],
+                overlay: QrScannerOverlayShape(
+                  borderColor: Colors.deepOrangeAccent,
+                  borderRadius: 20,
+                  borderLength: 40,
+                  borderWidth: 20,
+                  overlayColor: Colors.grey,
+                  cutOutSize: scanArea,
+                ),
+                onPermissionSet: (ctrl, p) => onPermissionSet(context, ctrl, p),
+              ),
             ),
-            child: Column(
-              children: [
-                const Text('QrCode read value : '),
-                Text(scanResultEncoded),
-                const SizedBox(height: 16,),
-                const Text('QrCode decoded value : '),
-                Text(scanResultDecoded),
-              ],
+
+            // Résultats
+            Container(
+              width: double.maxFinite,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text('QrCode read value : '),
+                  Text(scanResultEncoded),
+                  const SizedBox(height: 16),
+                  const Text('QrCode decoded value : '),
+                  Text(scanResultDecoded),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
-  }
-
-  onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
-    bool scanned = false;
-    controller.scannedDataStream.listen((scanData) {
-      if (!scanned) {
-        scanned = true;
-
-        if (!mounted) return;
-        setState(() {
-          scanResultEncoded = scanData.code ?? '';
-
-          //Decode result
-
-          // 1. Validator configuration
-          final config = ValidatorConfig(
-            validityDuration: const Duration(seconds: 60),
-          );
-
-          // 2. Create validator
-          final validator = SecureQRValidator(config);
-
-          // QR code validation
-          final result = validator.validateQRPayload(scanResultEncoded);
-
-          if (result.isValid) {
-            log('Valid QR Code!');
-            scanResultDecoded = result.data.toString();
-          } else if (result.isExpired) {
-            log('QR Code expired');
-            scanResultDecoded = 'QR Code expired';
-          } else {
-            log('Invalid QR Code: ${result.error?.message}');
-            scanResultDecoded = 'Invalid QR Code: ${result.error?.message}';
-          }
-        });
-      }
-    });
   }
 
   onPermissionSet(BuildContext context, QRViewController ctrl, bool p) {
@@ -142,5 +173,35 @@ class _MyHomePageState extends State<MyHomePage> {
         const SnackBar(content: Text('no Permission')),
       );
     }
+  }
+
+  onQRViewCreated(QRViewController controller) {
+    this.controller = controller;
+    bool scanned = false;
+    controller.scannedDataStream.listen((scanData) {
+      if (!scanned) {
+        scanned = true;
+        if (!mounted) return;
+        setState(() {
+          scanResultEncoded = scanData.code ?? '';
+          final result = validator.validateQRPayload(scanResultEncoded);
+
+          if (result.isValid) {
+            scanResultDecoded = result.data.toString();
+          } else if (result.isExpired) {
+            scanResultDecoded = 'QR Code expired';
+          } else {
+            scanResultDecoded = 'Invalid QR Code: ${result.error?.message}';
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    secretKeyController.dispose();
+    super.dispose();
   }
 }
