@@ -1,26 +1,26 @@
 import 'package:secure_qr_validator/secure_qr_validator.dart';
 
-/// Représente le résultat complet d'une validation de QR code.
-/// Cette classe encapsule toutes les informations nécessaires concernant
-/// la validité d'un QR code, y compris les données extraites et les erreurs
-/// éventuelles.
+/// Represents the complete result of a QR code validation.
+/// This class encapsulates all necessary information regarding
+/// the validity of a QR code, including extracted data and potential
+/// errors.
 class ValidationResult {
-  /// Indique si le QR code est valide
+  /// Indicates if the QR code is valid
   final bool isValid;
 
-  /// Données extraites du QR code (null si non valide)
+  /// Data extracted from the QR code (null if invalid)
   final Map<String, dynamic>? data;
 
-  /// Erreur de validation (null si valide)
+  /// Validation error (null if valid)
   final ValidationError? error;
 
-  /// Timestamp de génération du QR code
+  /// Generation timestamp of the QR code
   final DateTime? generatedAt;
 
-  /// Identifiant unique du QR code
+  /// Unique identifier of the QR code
   final String? id;
 
-  /// Constructeur privé pour assurer l'intégrité des données
+  /// Private constructor to ensure data integrity
   const ValidationResult._({
     required this.isValid,
     this.data,
@@ -29,7 +29,7 @@ class ValidationResult {
     this.id,
   });
 
-  /// Crée un résultat pour un QR code valide
+  /// Creates a result for a valid QR code
   factory ValidationResult.valid({
     required Map<String, dynamic> data,
     required DateTime generatedAt,
@@ -43,7 +43,7 @@ class ValidationResult {
     );
   }
 
-  /// Crée un résultat pour un QR code invalide
+  /// Creates a result for an invalid QR code
   factory ValidationResult.invalid(ValidationError error) {
     return ValidationResult._(
       isValid: false,
@@ -51,44 +51,44 @@ class ValidationResult {
     );
   }
 
-  /// Vérifie si l'erreur est d'un type spécifique
+  /// Checks if the error is of a specific type
   bool hasError(ValidationErrorType type) {
     return error?.type == type;
   }
 
-  /// Indique si le QR code est expiré
+  /// Indicates if the QR code is expired
   bool get isExpired => hasError(ValidationErrorType.expired);
 
-  /// Vérifie la présence d'une clé spécifique dans les données
+  /// Checks for the presence of a specific key in the data
   ///
-  /// Cette méthode vérifie si :
-  /// 1. Le QR code est valide
-  /// 2. Les données existent
-  /// 3. La clé spécifiée existe dans les données
+  /// This method verifies if:
+  /// 1. The QR code is valid
+  /// 2. The data exists
+  /// 3. The specified key exists in the data
   ///
-  /// [key] : La clé à rechercher dans les données
+  /// [key]: The key to search for in the data
   ///
-  /// Retourne true si la clé existe dans les données d'un QR code valide
+  /// Returns true if the key exists in the data of a valid QR code
   bool hasData(String key) {
     return isValid && data != null && data!.containsKey(key);
   }
 
-  /// Récupère une valeur typée avec gestion de valeur par défaut
+  /// Retrieves a typed value with default value handling
   ///
-  /// Cette méthode offre une façon sûre et typée d'accéder aux données,
-  /// avec une gestion intégrée des cas d'erreur et des conversions de type.
+  /// This method provides a safe and typed way to access data,
+  /// with integrated handling of error cases and type conversions.
   ///
-  /// Exemple d'utilisation :
+  /// Usage example:
   /// ```dart
   /// final age = result.getData<int>('age', defaultValue: 0);
-  /// final name = result.getData<String>('name', defaultValue: 'Inconnu');
+  /// final name = result.getData<String>('name', defaultValue: 'Unknown');
   /// ```
   ///
-  /// [T] : Le type de donnée attendu
-  /// [key] : La clé de la donnée
-  /// [defaultValue] : Valeur retournée en cas d'absence ou d'erreur
+  /// [T]: The expected data type
+  /// [key]: The data key
+  /// [defaultValue]: Value returned in case of absence or error
   ///
-  /// Retourne la valeur typée ou la valeur par défaut
+  /// Returns the typed value or the default value
   T? getData<T>(String key, {T? defaultValue}) {
     if (!isValid || data == null) return defaultValue;
 
@@ -96,7 +96,7 @@ class ValidationResult {
     if (value == null) return defaultValue;
     if (value is T) return value;
 
-    // Tentative de conversion pour certains types courants
+    // Attempt conversion for common types
     if (T == String) return value.toString() as T;
     if (T == int && value is num) return value.toInt() as T;
     if (T == double && value is num) return value.toDouble() as T;
@@ -104,20 +104,20 @@ class ValidationResult {
     return defaultValue;
   }
 
-  /// Vérifie si toutes les clés spécifiées existent dans les données
+  /// Checks if all specified keys exist in the data
   ///
-  /// [keys] : Liste des clés à vérifier
+  /// [keys]: List of keys to check
   ///
-  /// Retourne true si toutes les clés existent
+  /// Returns true if all keys exist
   bool hasAllData(List<String> keys) {
     return keys.every(hasData);
   }
 
-  /// Vérifie si au moins une des clés spécifiées existe dans les données
+  /// Checks if at least one of the specified keys exists in the data
   ///
-  /// [keys] : Liste des clés à vérifier
+  /// [keys]: List of keys to check
   ///
-  /// Retourne true si au moins une clé existe
+  /// Returns true if at least one key exists
   bool hasAnyData(List<String> keys) {
     return keys.any(hasData);
   }

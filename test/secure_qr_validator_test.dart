@@ -6,10 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:secure_qr_validator/secure_qr_validator.dart';
 
 void main() {
-// Clé de test constante pour la reproductibilité des tests
+  // Constant test key for test reproducibility
   const testKey = '2024#@#qrcod#orange@##perform#==';
 
-  // Fonction utilitaire pour générer une signature de test
+  // Utility function to generate a test signature
   String generateTestSignature(Map<String, dynamic> payload, String key) {
     final data = jsonEncode(payload);
     final keyBytes = utf8.encode(key);
@@ -19,7 +19,7 @@ void main() {
     return digest.toString();
   }
 
-  // Fonction utilitaire pour créer un payload de test
+  // Utility function to create a test payload
   String createTestPayload({
     required Map<String, dynamic> data,
     bool encrypted = false,
@@ -46,7 +46,7 @@ void main() {
       final encrypter = Encrypter(AES(Key.fromUtf8(testKey.padRight(32))));
       final iv = IV.fromLength(16);
       final encrypted = encrypter.encrypt(jsonPayload, iv: iv);
-      // Combiner l'IV et les données cryptées
+      // Combine IV and encrypted data
       final combined = iv.bytes + encrypted.bytes;
       return base64Encode(combined);
     }
@@ -54,8 +54,8 @@ void main() {
     return base64Encode(utf8.encode(jsonPayload));
   }
 
-  group('Configuration du validateur', () {
-    test('devrait accepter une configuration valide', () {
+  group('Validator Configuration', () {
+    test('should accept valid configuration', () {
       expect(
             () => ValidatorConfig(
           secretKey: testKey,
@@ -67,17 +67,17 @@ void main() {
       );
     });
 
-    test('devrait rejeter une clé trop courte avec encryption activée', () {
+    test('should reject too short key with encryption enabled', () {
       expect(
             () => ValidatorConfig(
-          secretKey: 'court',
+          secretKey: 'short',
           enableEncryption: true,
         ),
         throwsArgumentError,
       );
     });
 
-    test('devrait exiger une clé si encryption ou signature activée', () {
+    test('should require key if encryption or signature enabled', () {
       expect(
             () => ValidatorConfig(enableEncryption: true),
         throwsArgumentError,
@@ -89,7 +89,7 @@ void main() {
     });
   });
 
-  group('Validation basique', () {
+  group('Basic Validation', () {
     late SecureQRValidator validator;
 
     setUp(() {
@@ -98,7 +98,7 @@ void main() {
       ));
     });
 
-    test('devrait valider un payload simple valide', () {
+    test('should validate a simple valid payload', () {
       final payload = createTestPayload(data: {'test': 'value'});
       final result = validator.validateQRPayload(payload);
 
@@ -106,14 +106,14 @@ void main() {
       expect(result.data?['test'], equals('value'));
     });
 
-    test('devrait rejeter un payload mal formaté', () {
+    test('should reject malformed payload', () {
       final result = validator.validateQRPayload('invalid_base64');
 
       expect(result.isValid, isFalse);
       expect(result.error?.type, equals(ValidationErrorType.decryption));
     });
 
-    test('devrait rejeter un payload avec version non supportée', () {
+    test('should reject payload with unsupported version', () {
       final payload = createTestPayload(
         data: {'test': 'value'},
         version: 999,
@@ -125,7 +125,7 @@ void main() {
     });
   });
 
-  group('Validation avec encryption', () {
+  group('Validation with Encryption', () {
     late SecureQRValidator validator;
 
     setUp(() {
@@ -136,7 +136,7 @@ void main() {
       ));
     });
 
-    test('devrait décrypter et valider un payload crypté', () {
+    test('should decrypt and validate encrypted payload', () {
       final payload = createTestPayload(
         data: {'test': 'encrypted'},
         encrypted: true,
@@ -147,7 +147,7 @@ void main() {
       expect(result.data?['test'], equals('encrypted'));
     });
 
-    test('devrait rejeter un payload non crypté quand encryption requise', () {
+    test('should reject non-encrypted payload when encryption required', () {
       final payload = createTestPayload(
         data: {'test': 'value'},
         encrypted: false,
@@ -159,7 +159,7 @@ void main() {
     });
   });
 
-  group('Validation avec signature', () {
+  group('Validation with Signature', () {
     late SecureQRValidator validator;
 
     setUp(() {
@@ -170,7 +170,7 @@ void main() {
       ));
     });
 
-    test('devrait accepter un payload correctement signé', () {
+    test('should accept correctly signed payload', () {
       final payload = createTestPayload(
         data: {'test': 'signed'},
         signed: true,
@@ -181,10 +181,10 @@ void main() {
       expect(result.data?['test'], equals('signed'));
     });
 
-    test('devrait rejeter un payload avec signature invalide', () {
+    test('should reject payload with invalid signature', () {
       final payload = createTestPayload(
         data: {'test': 'bad_signature'},
-        signed: false,  // Pas de signature
+        signed: false,  // No signature
       );
       final result = validator.validateQRPayload(payload);
 
@@ -193,7 +193,7 @@ void main() {
     });
   });
 
-  group('Validation temporelle', () {
+  group('Temporal Validation', () {
     late SecureQRValidator validator;
 
     setUp(() {
@@ -202,7 +202,7 @@ void main() {
       ));
     });
 
-    test('devrait accepter un payload non expiré', () {
+    test('should accept non-expired payload', () {
       final payload = createTestPayload(
         data: {'test': 'value'},
         timestamp: DateTime.now(),
@@ -212,7 +212,7 @@ void main() {
       expect(result.isValid, isTrue);
     });
 
-    test('devrait rejeter un payload expiré', () {
+    test('should reject expired payload', () {
       final oldTimestamp = DateTime.now().subtract(const Duration(minutes: 10));
       final payload = createTestPayload(
         data: {'test': 'value'},
@@ -225,17 +225,17 @@ void main() {
     });
   });
 
-  group('Règles de validation métier', () {
+  group('Business Rule Validation', () {
     late SecureQRValidator validator;
 
     setUp(() {
-      // Création du validateur avec des règles métier personnalisées
+      // Create validator with custom business rules
       final rules = [
         CommonValidationRules.required('userId'),
         CommonValidationRules.numberInRange('age', 18, 100),
             (data) {
           if (data['role'] == 'admin' && data['level'] < 5) {
-            return 'Un admin doit avoir un niveau >= 5';
+            return 'An admin must have level >= 5';
           }
           return null;
         },
@@ -247,7 +247,7 @@ void main() {
       );
     });
 
-    test('devrait valider des données respectant toutes les règles', () {
+    test('should validate data respecting all rules', () {
       final payload = createTestPayload(data: {
         'userId': 'user123',
         'age': 25,
@@ -259,7 +259,7 @@ void main() {
       expect(result.isValid, isTrue);
     });
 
-    test('devrait rejeter des données violant une règle required', () {
+    test('should reject data violating required rule', () {
       final payload = createTestPayload(data: {
         'age': 25,
       });
@@ -269,7 +269,7 @@ void main() {
       expect(result.error?.type, equals(ValidationErrorType.businessRule));
     });
 
-    test('devrait rejeter des données hors limites', () {
+    test('should reject out-of-bounds data', () {
       final payload = createTestPayload(data: {
         'userId': 'user123',
         'age': 15,
@@ -280,7 +280,7 @@ void main() {
       expect(result.error?.type, equals(ValidationErrorType.businessRule));
     });
 
-    test('devrait rejeter des données violant une règle personnalisée', () {
+    test('should reject data violating custom rule', () {
       final payload = createTestPayload(data: {
         'userId': 'user123',
         'age': 25,
@@ -294,8 +294,8 @@ void main() {
     });
   });
 
-  group('Extensions ValidationResult', () {
-    test('getData devrait retourner la valeur typée correcte', () {
+  group('ValidationResult Extensions', () {
+    test('getData should return correct typed value', () {
       final result = ValidationResult.valid(
         data: {'age': 25, 'name': 'Test'},
         generatedAt: DateTime.now(),
@@ -307,7 +307,7 @@ void main() {
       expect(result.getData<bool>('missing', defaultValue: true), isTrue);
     });
 
-    test('hasData devrait correctement vérifier la présence des données', () {
+    test('hasData should correctly verify data presence', () {
       final result = ValidationResult.valid(
         data: {'key1': 'value1'},
         generatedAt: DateTime.now(),

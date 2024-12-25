@@ -7,17 +7,17 @@ import 'validation_result.dart';
 import 'validation_error.dart';
 import 'validation_rule.dart';
 
-/// Validateur principal pour les QR codes sécurisés.
-/// Cette classe implémente toute la logique de validation, incluant :
-/// - Décryptage des données
-/// - Vérification de signature
-/// - Validation temporelle
-/// - Application des règles métier
+/// Main validator for secure QR codes.
+/// This class implements all validation logic, including:
+/// - Data decryption
+/// - Signature verification
+/// - Temporal validation
+/// - Business rules application
 class SecureQRValidator {
   final ValidatorConfig config;
   final List<ValidationRule> _businessRules;
 
-  /// Instance de l'encrypteur AES (null si cryptage désactivé)
+  /// AES encrypter instance (null if encryption is disabled)
   final Encrypter? _encrypter;
 
   SecureQRValidator(
@@ -28,62 +28,62 @@ class SecureQRValidator {
             ? Encrypter(AES(Key.fromUtf8(config.secretKey!.padRight(32))))
             : null;
 
-  /// Valide un payload de QR code et extrait les données si valides
+  /// Validates a QR code payload and extracts data if valid
   ValidationResult validateQRPayload(String encodedPayload) {
     try {
-      // Étape 1: Décryptage ou décodage
+      // Step 1: Decryption or decoding
       final jsonPayload = _decryptOrDecode(encodedPayload);
       if (jsonPayload == null) {
         return ValidationResult.invalid(const ValidationError(
           type: ValidationErrorType.decryption,
-          message: 'Échec du décryptage ou décodage',
+          message: 'Decryption or decoding failed',
         ));
       }
 
-      // Étape 2: Parsing et validation de base
+      // Step 2: Parsing and basic validation
       final payload = _parseAndValidateBasics(jsonPayload);
       if (payload == null) {
         return ValidationResult.invalid(const ValidationError(
           type: ValidationErrorType.format,
-          message: 'Format de payload invalide',
+          message: 'Invalid payload format',
         ));
       }
 
-      // Étape 3: Vérification de version
+      // Step 3: Version verification
       final version = payload['version'] as int;
       if (version > config.maxSupportedVersion) {
         return ValidationResult.invalid(ValidationError(
           type: ValidationErrorType.version,
-          message: 'Version non supportée: $version',
+          message: 'Unsupported version: $version',
         ));
       }
 
-      // Étape 4: Vérification de signature
+      // Step 4: Signature verification
       if (config.enableSignature && !_verifySignature(payload)) {
         return ValidationResult.invalid(const ValidationError(
           type: ValidationErrorType.signature,
-          message: 'Signature invalide',
+          message: 'Invalid signature',
         ));
       }
 
-      // Étape 5: Vérification de l'expiration
+      // Step 5: Expiration verification
       final generatedAt = DateTime.fromMillisecondsSinceEpoch(
           payload['timestamp'] as int
       );
       if (_isExpired(generatedAt)) {
         return ValidationResult.invalid(const ValidationError(
           type: ValidationErrorType.expired,
-          message: 'QR code expiré',
+          message: 'QR code expired',
         ));
       }
 
-      // Étape 6: Application des règles métier
+      // Step 6: Business rules application
       final businessError = _applyBusinessRules(payload['data']);
       if (businessError != null) {
         return ValidationResult.invalid(businessError);
       }
 
-      // Tout est valide !
+      // All valid!
       return ValidationResult.valid(
         data: payload['data'],
         generatedAt: generatedAt,
@@ -92,7 +92,7 @@ class SecureQRValidator {
     } catch (e) {
       return ValidationResult.invalid(ValidationError(
         type: ValidationErrorType.unknown,
-        message: 'Erreur inattendue: ${e.toString()}',
+        message: 'Unexpected error: ${e.toString()}',
       ));
     }
   }
@@ -101,7 +101,7 @@ class SecureQRValidator {
     try {
       if (config.enableEncryption && _encrypter != null) {
         final bytes = base64Decode(encodedPayload);
-        // Extraire l'IV (16 premiers bytes) et les données cryptées
+        // Extract IV (first 16 bytes) and encrypted data
         final iv = IV(bytes.sublist(0, 16));
         final encryptedBytes = bytes.sublist(16);
         final encrypted = Encrypted(encryptedBytes);
@@ -119,11 +119,11 @@ class SecureQRValidator {
       final payload = jsonDecode(jsonPayload);
       if (payload is! Map<String, dynamic>) return null;
 
-      // Vérification des champs requis
+      // Required fields verification
       final requiredFields = ['data', 'timestamp', 'version', 'id'];
       if (!requiredFields.every(payload.containsKey)) return null;
 
-      // Vérification des types
+      // Type verification
       if (payload['data'] is! Map<String, dynamic>) return null;
       if (payload['timestamp'] is! int) return null;
       if (payload['version'] is! int) return null;

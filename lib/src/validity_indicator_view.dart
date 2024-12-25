@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:secure_qr_validator/secure_qr_validator.dart';
 
-/// Widget affichant le statut de validation d'un QR code
-/// avec une mise en forme adaptative et personnalisable
+/// Widget displaying the validation status of a QR code
+/// with adaptive and customizable formatting
 class ValidityIndicatorView extends StatelessWidget {
-  /// Résultat de la validation à afficher
+  /// Validation result to display
   final ValidationResult result;
 
-  /// Style du texte pour les messages
+  /// Text style for messages
   final TextStyle? textStyle;
 
-  /// Couleur pour les QR codes valides
+  /// Color for valid QR codes
   final Color validColor;
 
-  /// Couleur pour les QR codes expirés
+  /// Color for expired QR codes
   final Color expiredColor;
 
-  /// Couleur pour les QR codes invalides
+  /// Color for invalid QR codes
   final Color invalidColor;
 
-  /// Constructeur avec options de personnalisation
+  /// Constructor with customization options
   const ValidityIndicatorView({
     super.key,
     required this.result,
@@ -80,35 +80,35 @@ class ValidityIndicatorView extends StatelessWidget {
 
   String _getStatusMessage() {
     if (result.isValid) {
-      return 'QR code valide';
+      return 'Valid QR code';
     } else if (result.isExpired) {
-      return 'QR code expiré';
+      return 'Expired QR code';
     } else if (result.error != null) {
       switch (result.error!.type) {
         case ValidationErrorType.decryption:
-          return 'Erreur de décryptage';
+          return 'Decryption error';
         case ValidationErrorType.decoding:
-          return 'Format invalide';
+          return 'Invalid format';
         case ValidationErrorType.format:
-          return 'Contenu mal formaté';
+          return 'Malformed content';
         case ValidationErrorType.version:
-          return 'Version non supportée';
+          return 'Unsupported version';
         case ValidationErrorType.signature:
-          return 'Signature invalide';
+          return 'Invalid signature';
         case ValidationErrorType.businessRule:
-          return 'Règle métier non respectée:\n${result.error!.message}';
+          return 'Business rule violation:\n${result.error!.message}';
         case ValidationErrorType.unknown:
         default:
-          return 'Erreur de validation:\n${result.error!.message}';
+          return 'Validation error:\n${result.error!.message}';
       }
     }
-    return 'État inconnu';
+    return 'Unknown state';
   }
 }
 
-/// Extension permettant de simplifier l'utilisation du validateur
-/// dans un contexte Flutter
+/// Extension to simplify validator usage
+/// in a Flutter context
 extension ValidityIndicatorExtension on ValidationResult {
-  /// Crée un indicateur de validité avec les paramètres par défaut
+  /// Creates a validity indicator with default parameters
   Widget toIndicator() => ValidityIndicatorView(result: this);
 }

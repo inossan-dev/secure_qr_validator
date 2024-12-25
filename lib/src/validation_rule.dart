@@ -1,41 +1,41 @@
-/// Type définissant une règle de validation métier.
+/// Type defining a business validation rule.
 ///
-/// Une règle prend en entrée les données du QR code et retourne :
-/// - null si la validation réussit
-/// - un message d'erreur (String) si la validation échoue
+/// A rule takes QR code data as input and returns:
+/// - null if validation succeeds
+/// - an error message (String) if validation fails
 typedef ValidationRule = String? Function(Map<String, dynamic> data);
 
-/// Collection de règles de validation couramment utilisées
+/// Collection of commonly used validation rules
 class CommonValidationRules {
-  /// Vérifie la présence d'un champ requis
+  /// Checks for the presence of a required field
   static ValidationRule required(String fieldName) {
     return (data) {
       if (!data.containsKey(fieldName) || data[fieldName] == null) {
-        return 'Le champ $fieldName est requis';
+        return 'The field $fieldName is required';
       }
       return null;
     };
   }
 
-  /// Vérifie qu'un champ numérique est dans un intervalle donné
+  /// Checks if a numeric field is within a given range
   static ValidationRule numberInRange(String fieldName, num min, num max) {
     return (data) {
       final value = data[fieldName];
       if (value is! num) {
-        return 'Le champ $fieldName doit être un nombre';
+        return 'The field $fieldName must be a number';
       }
       if (value < min || value > max) {
-        return 'Le champ $fieldName doit être entre $min et $max';
+        return 'The field $fieldName must be between $min and $max';
       }
       return null;
     };
   }
 
-  /// Vérifie qu'une date est dans le futur
+  /// Checks if a date is in the future
   static ValidationRule dateMustBeFuture(String fieldName) {
     return (data) {
       final value = data[fieldName];
-      if (value == null) return null; // Ignorer si le champ est absent
+      if (value == null) return null; // Ignore if field is absent
 
       DateTime? date;
       if (value is String) {
@@ -45,84 +45,84 @@ class CommonValidationRules {
       }
 
       if (date == null) {
-        return 'Le champ $fieldName doit être une date valide';
+        return 'The field $fieldName must be a valid date';
       }
 
       if (date.isBefore(DateTime.now())) {
-        return 'Le champ $fieldName doit être dans le futur';
+        return 'The field $fieldName must be in the future';
       }
       return null;
     };
   }
 
-  /// Vérifie qu'une chaîne correspond à un format regex
+  /// Checks if a string matches a regex pattern
   static ValidationRule matchesPattern(String fieldName, Pattern pattern) {
     return (data) {
       final value = data[fieldName];
-      if (value == null) return null; // Ignorer si le champ est absent
+      if (value == null) return null; // Ignore if field is absent
 
       if (value is! String) {
-        return 'Le champ $fieldName doit être une chaîne de caractères';
+        return 'The field $fieldName must be a string';
       }
 
       if (!RegExp(pattern.toString()).hasMatch(value)) {
-        return 'Le champ $fieldName ne correspond pas au format attendu';
+        return 'The field $fieldName does not match the expected format';
       }
       return null;
     };
   }
 
-  /// Vérifie qu'une liste a une taille comprise dans un intervalle
+  /// Checks if a list's length is within a given range
   static ValidationRule listLength(String fieldName, {int? min, int? max}) {
     return (data) {
       final value = data[fieldName];
       if (value == null) return null;
 
       if (value is! List) {
-        return 'Le champ $fieldName doit être une liste';
+        return 'The field $fieldName must be a list';
       }
 
       if (min != null && value.length < min) {
-        return 'Le champ $fieldName doit contenir au moins $min éléments';
+        return 'The field $fieldName must contain at least $min elements';
       }
 
       if (max != null && value.length > max) {
-        return 'Le champ $fieldName doit contenir au plus $max éléments';
+        return 'The field $fieldName must contain at most $max elements';
       }
 
       return null;
     };
   }
 
-  /// Vérifie qu'un ensemble de champs sont mutuellement exclusifs
+  /// Checks that a set of fields are mutually exclusive
   static ValidationRule mutuallyExclusive(List<String> fieldNames) {
     return (data) {
       final presentFields = fieldNames.where((field) => data[field] != null);
       if (presentFields.length > 1) {
-        return 'Les champs ${presentFields.join(", ")} sont mutuellement exclusifs';
+        return 'The fields ${presentFields.join(", ")} are mutually exclusive';
       }
       return null;
     };
   }
 }
 
-/// Builder permettant de combiner plusieurs règles de validation
+/// Builder allowing to combine multiple validation rules
 class ValidationRuleBuilder {
   final List<ValidationRule> _rules = [];
 
-  /// Ajoute une règle à la liste
+  /// Adds a rule to the list
   ValidationRuleBuilder addRule(ValidationRule rule) {
     _rules.add(rule);
     return this;
   }
 
-  /// Ajoute plusieurs règles à la liste
+  /// Adds multiple rules to the list
   ValidationRuleBuilder addRules(List<ValidationRule> rules) {
     _rules.addAll(rules);
     return this;
   }
 
-  /// Crée une règle composite qui combine toutes les règles ajoutées
+  /// Creates a composite rule that combines all added rules
   ValidationRule build() {
     return (data) {
       for (final rule in _rules) {

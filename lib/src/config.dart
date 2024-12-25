@@ -1,25 +1,25 @@
-/// Configuration pour la validation des QR codes sécurisés.
-/// Cette classe regroupe tous les paramètres nécessaires pour valider
-/// les QR codes selon différents niveaux de sécurité.
+/// Configuration for secure QR code validation.
+/// This class groups all necessary parameters to validate
+/// QR codes according to different security levels.
 class ValidatorConfig {
-  /// Clé secrète utilisée pour le décryptage et la vérification de signature.
-  /// Doit être identique à celle utilisée pour la génération.
+  /// Secret key used for decryption and signature verification.
+  /// Must be identical to the one used for generation.
   final String? secretKey;
 
-  /// Durée pendant laquelle un QR code est considéré comme valide
-  /// après sa génération.
+  /// Duration for which a QR code is considered valid
+  /// after its generation.
   final Duration validityDuration;
 
-  /// Indique si le contenu du QR code doit être décrypté.
-  /// Doit correspondre au paramètre de génération.
+  /// Indicates if the QR code content must be decrypted.
+  /// Must match the generation parameter.
   final bool enableEncryption;
 
-  /// Indique si la signature du QR code doit être vérifiée.
-  /// Doit correspondre au paramètre de génération.
+  /// Indicates if the QR code signature must be verified.
+  /// Must match the generation parameter.
   final bool enableSignature;
 
-  /// Version maximale du format de QR code supportée par ce validateur.
-  /// Permet une évolution future du format tout en gardant la compatibilité.
+  /// Maximum QR code format version supported by this validator.
+  /// Allows future format evolution while maintaining compatibility.
   final int maxSupportedVersion;
 
   ValidatorConfig({
@@ -29,22 +29,22 @@ class ValidatorConfig {
     this.enableSignature = false,
     this.maxSupportedVersion = 1,
   }) {
-    // Validation des paramètres
+    // Parameter validation
     if ((enableEncryption || enableSignature) && secretKey == null) {
       throw ArgumentError(
-        'La clé secrète est requise quand le cryptage ou la signature est activé',
+        'Secret key is required when encryption or signature is enabled',
       );
     }
 
     if (enableEncryption && secretKey != null && secretKey!.length < 32) {
       throw ArgumentError(
-        'La clé secrète doit faire au moins 32 caractères quand le cryptage est activé',
+        'Secret key must be at least 32 characters when encryption is enabled',
       );
     }
 
     if (maxSupportedVersion < 1) {
       throw ArgumentError(
-        'La version maximale supportée doit être au moins 1',
+        'Maximum supported version must be at least 1',
       );
     }
   }

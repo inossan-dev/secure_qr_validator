@@ -2,31 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:secure_qr_validator/secure_qr_validator.dart';
 
 void main() {
-  // Configuration du validateur
+  // Validator configuration
   final config = ValidatorConfig(
     validityDuration: const Duration(minutes: 5),
   );
 
-  // Création du validateur
+  // Create validator
   final validator = SecureQRValidator(config);
 
-  // Validation d'un QR code
+  // QR code validation
   void validateQRCode(String qrContent) {
     final result = validator.validateQRPayload(qrContent);
 
     if (result.isValid) {
-      print('QR Code valide !');
-      print('ID Utilisateur: ${result.getData<String>('userId')}');
-      print('Niveau d\'accès: ${result.getData<int>('accessLevel')}');
+      print('Valid QR Code!');
+      print('User ID: ${result.getData<String>('userId')}');
+      print('Access Level: ${result.getData<int>('accessLevel')}');
     } else if (result.isExpired) {
-      print('QR Code expiré');
+      print('QR Code expired');
     } else {
-      print('QR Code invalide: ${result.error?.message}');
+      print('Invalid QR Code: ${result.error?.message}');
     }
   }
 }
 
-// Exemple d'utilisation dans un widget Flutter
+// Example usage in a Flutter widget
 class QRValidationScreen extends StatelessWidget {
   final SecureQRValidator validator;
 
@@ -35,11 +35,11 @@ class QRValidationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Validation QR')),
+      appBar: AppBar(title: const Text('QR Validation')),
       body: Center(
         child: FutureBuilder<String>(
-          //future: scanQRCode(), // Fonction hypothétique de scan
-          future: Future.delayed(const Duration(seconds: 5)), // Fonction hypothétique de scan
+          //future: scanQRCode(), // Hypothetical scan function
+          future: Future.delayed(const Duration(seconds: 5)), // Hypothetical scan function
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
               return const CircularProgressIndicator();
@@ -50,13 +50,13 @@ class QRValidationScreen extends StatelessWidget {
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Utilisation du widget ValidityIndicator
+                // Using the ValidityIndicator widget
                 ValidityIndicatorView(result: result),
 
                 if (result.isValid) ...[
                   const SizedBox(height: 16),
                   Text('ID: ${result.getData<String>('userId')}'),
-                  Text('Niveau: ${result.getData<int>('accessLevel')}'),
+                  Text('Level: ${result.getData<int>('accessLevel')}'),
                 ],
               ],
             );

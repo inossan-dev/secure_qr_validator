@@ -1,31 +1,31 @@
-/// Représente les différents types d'erreurs possibles lors de la validation
+/// Represents the different possible error types during validation
 enum ValidationErrorType {
-  /// Erreur de décryptage (clé incorrecte ou données corrompues)
+  /// Decryption error (incorrect key or corrupted data)
   decryption,
 
-  /// Erreur lors du décodage base64
+  /// Base64 decoding error
   decoding,
 
-  /// Format JSON invalide
+  /// Invalid JSON format
   format,
 
-  /// Version non supportée du QR code
+  /// Unsupported QR code version
   version,
 
-  /// Signature invalide
+  /// Invalid signature
   signature,
 
-  /// QR code expiré
+  /// Expired QR code
   expired,
 
-  /// Erreur lors de la validation des règles métier
+  /// Business rule validation error
   businessRule,
 
-  /// Erreur inattendue
+  /// Unexpected error
   unknown,
 }
 
-/// Encapsule les informations détaillées d'une erreur de validation
+/// Encapsulates detailed information about a validation error
 class ValidationError {
   final ValidationErrorType type;
   final String message;
