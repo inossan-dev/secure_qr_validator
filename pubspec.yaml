@@ -1,6 +1,6 @@
 name: secure_qr_validator
 description: A library for QR code validation with customizable rules and extensions
-version: 1.0.0
+version: 1.0.2
 homepage:
 
 environment:

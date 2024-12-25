@@ -3,6 +3,18 @@
 All notable changes to the Secure QR Validator will be documented in this file.
 
 
+## 1.0.2 - 2024-12-25
+
+## Added
+
+* update readme
+
+## 1.0.1 - 2024-12-25
+
+## Added
+
+* reviews class comments
+
 ## 1.0.0 - 2024-12-25
 
 ## Added
