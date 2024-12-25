@@ -3,7 +3,7 @@ import 'package:secure_qr_validator/secure_qr_validator.dart';
 
 /// Widget affichant le statut de validation d'un QR code
 /// avec une mise en forme adaptative et personnalisable
-class ValidityIndicator extends StatelessWidget {
+class ValidityIndicatorView extends StatelessWidget {
   /// Résultat de la validation à afficher
   final ValidationResult result;
 
@@ -20,7 +20,7 @@ class ValidityIndicator extends StatelessWidget {
   final Color invalidColor;
 
   /// Constructeur avec options de personnalisation
-  const ValidityIndicator({
+  const ValidityIndicatorView({
     super.key,
     required this.result,
     this.textStyle,
@@ -110,5 +110,5 @@ class ValidityIndicator extends StatelessWidget {
 /// dans un contexte Flutter
 extension ValidityIndicatorExtension on ValidationResult {
   /// Crée un indicateur de validité avec les paramètres par défaut
-  Widget toIndicator() => ValidityIndicator(result: this);
+  Widget toIndicator() => ValidityIndicatorView(result: this);
 }

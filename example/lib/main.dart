@@ -51,7 +51,7 @@ class QRValidationScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Utilisation du widget ValidityIndicator
-                ValidityIndicator(result: result),
+                ValidityIndicatorView(result: result),
 
                 if (result.isValid) ...[
                   const SizedBox(height: 16),

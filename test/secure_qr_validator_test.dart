@@ -46,7 +46,9 @@ void main() {
       final encrypter = Encrypter(AES(Key.fromUtf8(testKey.padRight(32))));
       final iv = IV.fromLength(16);
       final encrypted = encrypter.encrypt(jsonPayload, iv: iv);
-      return base64Encode(encrypted.bytes);
+      // Combiner l'IV et les données cryptées
+      final combined = iv.bytes + encrypted.bytes;
+      return base64Encode(combined);
     }
 
     return base64Encode(utf8.encode(jsonPayload));
@@ -108,7 +110,7 @@ void main() {
       final result = validator.validateQRPayload('invalid_base64');
 
       expect(result.isValid, isFalse);
-      expect(result.error?.type, equals(ValidationErrorType.decoding));
+      expect(result.error?.type, equals(ValidationErrorType.decryption));
     });
 
     test('devrait rejeter un payload avec version non supportée', () {

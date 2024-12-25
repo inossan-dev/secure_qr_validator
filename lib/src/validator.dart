@@ -20,17 +20,13 @@ class SecureQRValidator {
   /// Instance de l'encrypteur AES (null si cryptage désactivé)
   final Encrypter? _encrypter;
 
-  /// Vecteur d'initialisation pour AES
-  final IV? _iv;
-
   SecureQRValidator(
       this.config, {
         List<ValidationRule> businessRules = const [],
       }) : _businessRules = businessRules,
         _encrypter = config.enableEncryption && config.secretKey != null
             ? Encrypter(AES(Key.fromUtf8(config.secretKey!.padRight(32))))
-            : null,
-        _iv = config.enableEncryption ? IV.fromLength(16) : null;
+            : null;
 
   /// Valide un payload de QR code et extrait les données si valides
   ValidationResult validateQRPayload(String encodedPayload) {
@@ -103,9 +99,13 @@ class SecureQRValidator {
 
   String? _decryptOrDecode(String encodedPayload) {
     try {
-      if (config.enableEncryption && _encrypter != null && _iv != null) {
-        final encrypted = Encrypted(base64Decode(encodedPayload));
-        return _encrypter!.decrypt(encrypted, iv: _iv!);
+      if (config.enableEncryption && _encrypter != null) {
+        final bytes = base64Decode(encodedPayload);
+        // Extraire l'IV (16 premiers bytes) et les données cryptées
+        final iv = IV(bytes.sublist(0, 16));
+        final encryptedBytes = bytes.sublist(16);
+        final encrypted = Encrypted(encryptedBytes);
+        return _encrypter!.decrypt(encrypted, iv: iv);
       } else {
         return utf8.decode(base64Decode(encodedPayload));
       }
