@@ -21,9 +21,9 @@ class SecureQRValidator {
   final Encrypter? _encrypter;
 
   SecureQRValidator(
-      this.config, {
-        List<ValidationRule> businessRules = const [],
-      }) : _businessRules = businessRules,
+    this.config, {
+    List<ValidationRule> businessRules = const [],
+  })  : _businessRules = businessRules,
         _encrypter = config.enableEncryption && config.secretKey != null
             ? Encrypter(AES(Key.fromUtf8(config.secretKey!.padRight(32))))
             : null;
@@ -67,9 +67,8 @@ class SecureQRValidator {
       }
 
       // Step 5: Expiration verification
-      final generatedAt = DateTime.fromMillisecondsSinceEpoch(
-          payload['timestamp'] as int
-      );
+      final generatedAt =
+          DateTime.fromMillisecondsSinceEpoch(payload['timestamp'] as int);
       if (_isExpired(generatedAt)) {
         return ValidationResult.invalid(const ValidationError(
           type: ValidationErrorType.expired,

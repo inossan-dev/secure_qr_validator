@@ -45,7 +45,7 @@ A robust Flutter package for validating secure QR codes with battle-tested encry
 
 ```yaml
 dependencies:
-  secure_qr_validator: ^1.0.2
+  secure_qr_validator: ^1.0.3
 ```
 
 2. Install packages:

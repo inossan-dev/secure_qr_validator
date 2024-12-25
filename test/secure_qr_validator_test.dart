@@ -57,7 +57,7 @@ void main() {
   group('Validator Configuration', () {
     test('should accept valid configuration', () {
       expect(
-            () => ValidatorConfig(
+        () => ValidatorConfig(
           secretKey: testKey,
           validityDuration: const Duration(minutes: 5),
           enableEncryption: true,
@@ -69,7 +69,7 @@ void main() {
 
     test('should reject too short key with encryption enabled', () {
       expect(
-            () => ValidatorConfig(
+        () => ValidatorConfig(
           secretKey: 'short',
           enableEncryption: true,
         ),
@@ -79,11 +79,11 @@ void main() {
 
     test('should require key if encryption or signature enabled', () {
       expect(
-            () => ValidatorConfig(enableEncryption: true),
+        () => ValidatorConfig(enableEncryption: true),
         throwsArgumentError,
       );
       expect(
-            () => ValidatorConfig(enableSignature: true),
+        () => ValidatorConfig(enableSignature: true),
         throwsArgumentError,
       );
     });
@@ -184,7 +184,7 @@ void main() {
     test('should reject payload with invalid signature', () {
       final payload = createTestPayload(
         data: {'test': 'bad_signature'},
-        signed: false,  // No signature
+        signed: false, // No signature
       );
       final result = validator.validateQRPayload(payload);
 
@@ -233,7 +233,7 @@ void main() {
       final rules = [
         CommonValidationRules.required('userId'),
         CommonValidationRules.numberInRange('age', 18, 100),
-            (data) {
+        (data) {
           if (data['role'] == 'admin' && data['level'] < 5) {
             return 'An admin must have level >= 5';
           }

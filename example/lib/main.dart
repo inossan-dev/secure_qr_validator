@@ -50,7 +50,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    secretKeyController = TextEditingController(text: '2024#@#qrcod#orange@##perform#==');
+    secretKeyController =
+        TextEditingController(text: '2024#@#qrcod#orange@##perform#==');
     updateValidator();
     super.initState();
   }
@@ -85,7 +86,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   TextField(
                     controller: secretKeyController,
-                    decoration: const InputDecoration(labelText: 'Clé secrète AES-256 (optionnel)'),
+                    decoration: const InputDecoration(
+                        labelText: 'Clé secrète AES-256 (optionnel)'),
                     onChanged: (_) => updateValidator(),
                   ),
                   SwitchListTile(
