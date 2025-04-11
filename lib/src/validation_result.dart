@@ -51,6 +51,22 @@ class ValidationResult {
     );
   }
 
+  /// Creates a result for an expired QR code, but with data included
+  factory ValidationResult.expiredWithData({
+    required ValidationError error,
+    required Map<String, dynamic> data,
+    required DateTime generatedAt,
+    required String id,
+  }) {
+    return ValidationResult._(
+      isValid: false,
+      error: error,
+      data: data,
+      generatedAt: generatedAt,
+      id: id,
+    );
+  }
+
   /// Checks if the error is of a specific type
   bool hasError(ValidationErrorType type) {
     return error?.type == type;
@@ -62,15 +78,14 @@ class ValidationResult {
   /// Checks for the presence of a specific key in the data
   ///
   /// This method verifies if:
-  /// 1. The QR code is valid
-  /// 2. The data exists
-  /// 3. The specified key exists in the data
+  /// 1. The data exists (even if QR code is invalid)
+  /// 2. The specified key exists in the data
   ///
   /// [key]: The key to search for in the data
   ///
-  /// Returns true if the key exists in the data of a valid QR code
+  /// Returns true if the key exists in the data
   bool hasData(String key) {
-    return isValid && data != null && data!.containsKey(key);
+    return data != null && data!.containsKey(key);
   }
 
   /// Retrieves a typed value with default value handling

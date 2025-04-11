@@ -22,12 +22,16 @@ class ValidatorConfig {
   /// Allows future format evolution while maintaining compatibility.
   final int maxSupportedVersion;
 
+  /// Whether to validate the expiration date
+  final bool enableExpirationCheck;
+
   ValidatorConfig({
     this.secretKey,
     this.validityDuration = const Duration(minutes: 5),
     this.enableEncryption = false,
     this.enableSignature = false,
     this.maxSupportedVersion = 1,
+    this.enableExpirationCheck = true,
   }) {
     // Parameter validation
     if ((enableEncryption || enableSignature) && secretKey == null) {

@@ -22,6 +22,7 @@ A robust Flutter package for validating secure QR codes with battle-tested encry
 - **AES Encryption**: Industry-standard AES-256 encryption support
 - **Digital Signatures**: HMAC-SHA256 signature verification
 - **Temporal Validation**: Time-based validation with expiration
+- **Data Access for Expired QR Codes**: Access to data even when QR code is expired
 - **Replay Protection**: Built-in mechanisms against replay attacks
 - **Tampering Detection**: Automatic detection of modified QR codes
 
@@ -45,7 +46,7 @@ A robust Flutter package for validating secure QR codes with battle-tested encry
 
 ```yaml
 dependencies:
-  secure_qr_validator: ^1.0.3
+  secure_qr_validator: ^1.1.0
 ```
 
 2. Install packages:
@@ -72,6 +73,7 @@ final validator = SecureQRValidator(
     validityDuration: Duration(minutes: 5),
     enableEncryption: true,
     enableSignature: true,
+    enableExpirationCheck: true, // Can be set to false to ignore expiration
   ),
 );
 
@@ -86,6 +88,10 @@ try {
     
     // Continue with business logic
     handleValidAccess(userId, accessLevel);
+  } else if (result.isExpired && result.data != null) {
+    // Handle expired QR codes with data available
+    final userId = result.getData<String>('userId');
+    handleExpiredQRCode(userId, result.generatedAt);
   } else {
     handleInvalidAccess(result.error);
   }
@@ -101,6 +107,7 @@ final validator = SecureQRValidator(
   ValidatorConfig(
     secretKey: 'your-secure-key-min-32-chars-long!!!',
     validityDuration: Duration(minutes: 5),
+    enableExpirationCheck: true,
   ),
   businessRules: [
     // Required fields
@@ -130,6 +137,13 @@ final validator = SecureQRValidator(
 ```dart
 final result = await validator.validateQRPayload(qrContent);
 
+// Data access works even for expired QR codes
+if (!result.isValid && result.isExpired && result.data != null) {
+  // Process expired QR code data
+  final userId = result.getData<String>('userId');
+  showExpiredQrCodeMessage(userId);
+}
+
 // Safe data access with type checking
 final UserProfile profile = result.getDataModel<UserProfile>(
   'profile',
@@ -145,6 +159,44 @@ if (result.hasAllData(['email', 'phone'])) {
   final contacts = Contacts(
     email: result.getData<String>('email'),
     phone: result.getData<String>('phone'),
+  );
+}
+```
+
+### Handling Expired QR Codes
+
+```dart
+// Check if a QR code is expired but still has accessible data
+if (result.isExpired && result.data != null) {
+  // Access expiration details
+  final expirationDate = result.generatedAt?.add(
+    validator.config.validityDuration,
+  );
+  
+  // Access the data even though it's expired
+  final ticketId = result.getData<String>('ticketId');
+  final userName = result.getData<String>('userName');
+  
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Expired Ticket'),
+      content: Text(
+        'This ticket expired on ${expirationDate?.toString()}.\n'
+        'Ticket ID: $ticketId\n'
+        'User: $userName'
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('Close'),
+        ),
+        TextButton(
+          onPressed: () => regenerateTicket(ticketId),
+          child: Text('Regenerate Ticket'),
+        ),
+      ],
+    ),
   );
 }
 ```
@@ -203,7 +255,15 @@ ValidityIndicatorView(
 ```dart
 try {
   final result = await validator.validateQRPayload(qrContent);
-  handleValidationResult(result);
+  
+  if (result.isValid) {
+    handleValidationResult(result);
+  } else if (result.isExpired && result.data != null) {
+    // Special handling for expired QR codes with data
+    handleExpiredQRWithData(result);
+  } else {
+    handleInvalidQR(result.error);
+  }
 } on ValidationException catch (e) {
   // Handle validation errors (invalid format, expired, etc.)
   showError('Validation Error', e.message);
@@ -241,6 +301,13 @@ try {
 - Add logging for security events
 - Use type-safe data access
 - Write comprehensive tests
+
+### Handling Expired QR Codes
+
+- Decide whether to enable expiration checks based on your use case
+- Implement graceful degradation for expired QR codes
+- Consider adding refresh/regeneration flows for expired codes
+- Add clear user messaging for expiration scenarios
 
 ## License
 

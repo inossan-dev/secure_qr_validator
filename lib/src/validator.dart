@@ -21,9 +21,9 @@ class SecureQRValidator {
   final Encrypter? _encrypter;
 
   SecureQRValidator(
-    this.config, {
-    List<ValidationRule> businessRules = const [],
-  })  : _businessRules = businessRules,
+      this.config, {
+        List<ValidationRule> businessRules = const [],
+      })  : _businessRules = businessRules,
         _encrypter = config.enableEncryption && config.secretKey != null
             ? Encrypter(AES(Key.fromUtf8(config.secretKey!.padRight(32))))
             : null;
@@ -67,26 +67,36 @@ class SecureQRValidator {
       }
 
       // Step 5: Expiration verification
-      final generatedAt =
-          DateTime.fromMillisecondsSinceEpoch(payload['timestamp'] as int);
-      if (_isExpired(generatedAt)) {
-        return ValidationResult.invalid(const ValidationError(
-          type: ValidationErrorType.expired,
-          message: 'QR code expired',
-        ));
+      final generatedAt = DateTime.fromMillisecondsSinceEpoch(payload['timestamp'] as int);
+
+      // Create common elements to be used in all results
+      final Map<String, dynamic> data = payload['data'];
+      final String id = payload['id'];
+
+      if (config.enableExpirationCheck && _isExpired(generatedAt)) {
+        // Return an invalid result but with the decoded data
+        return ValidationResult.expiredWithData(
+          error: const ValidationError(
+            type: ValidationErrorType.expired,
+            message: 'QR code expired',
+          ),
+          data: data,
+          generatedAt: generatedAt,
+          id: id,
+        );
       }
 
       // Step 6: Business rules application
-      final businessError = _applyBusinessRules(payload['data']);
+      final businessError = _applyBusinessRules(data);
       if (businessError != null) {
         return ValidationResult.invalid(businessError);
       }
 
       // All valid!
       return ValidationResult.valid(
-        data: payload['data'],
+        data: data,
         generatedAt: generatedAt,
-        id: payload['id'],
+        id: id,
       );
     } catch (e) {
       return ValidationResult.invalid(ValidationError(

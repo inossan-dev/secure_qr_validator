@@ -1,6 +1,6 @@
 name: secure_qr_validator
 description: A robust Flutter package for validating secure QR codes with battle-tested encryption, digital signatures, and customizable business rules. Perfect for access control, ticketing, and secure document verification.
-version: 1.0.3
+version: 1.1.0
 homepage: https://github.com/inossan-dev/secure_qr_validator.git
 
 environment:
