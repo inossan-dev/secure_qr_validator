@@ -2,6 +2,11 @@
 
 All notable changes to the Secure QR Validator will be documented in this file.
 
+## 1.1.1 - 2026-06-26
+
+### Changed
+Use of Flutter 3.38.6
+
 ## 1.1.0 - 2025-04-11
 
 ### Added
