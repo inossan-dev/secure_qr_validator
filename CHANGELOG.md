@@ -2,6 +2,24 @@
 
 All notable changes to the Secure QR Validator will be documented in this file.
 
+## 1.2.0 - 2026-07-14
+
+### Added
+
+* **Automatic backward-compatible validation**: `validateQRPayload` now transparently detects and decodes both the new compact format (CBOR + Base45, emitted by `secure_qr_generator` ≥ 1.1.0 with `payloadFormat: compact`) and the legacy format (JSON + Base64) — based on the payload's character set, with no configuration change required
+* Automatic fallback: if the detected format fails at a purely structural stage (encoding, decryption, or parsing), the validator retries with the other format before reporting failure, as a safety net against misdetection
+* Support for the compact format's encrypt-then-MAC signature ordering, allowing forged or corrupted QR codes to be rejected before decryption is attempted (the legacy format's sign-then-encrypt ordering is still supported for older QR codes)
+
+### Changed
+
+* Internal decode pipeline split into two format-specific paths sharing common expiration checking and business rule application, so both formats benefit from the same `enableExpirationCheck` / business rules behavior
+
+### Migration notes
+
+* **No breaking changes.** `validateQRPayload`'s signature and `ValidatorConfig` are unchanged — existing integrations continue to work as-is.
+* **Upgrade this package first, across all readers**, before switching any generator to `payloadFormat: compact`. A validator on 1.1.x or earlier only understands the legacy format and will fail to read compact-format QR codes.
+* New dependencies pulled in by this package: `cbor` and `base45`.
+
 ## 1.1.1 - 2026-06-26
 
 ### Changed

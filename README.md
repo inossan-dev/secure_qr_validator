@@ -9,6 +9,7 @@ A robust Flutter package for validating secure QR codes with battle-tested encry
 - [Features](#features)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Format Compatibility](#format-compatibility)
 - [Advanced Usage](#advanced-usage)
 - [Business Rules](#business-rules)
 - [Status Visualization](#status-visualization)
@@ -25,6 +26,11 @@ A robust Flutter package for validating secure QR codes with battle-tested encry
 - **Data Access for Expired QR Codes**: Access to data even when QR code is expired
 - **Replay Protection**: Built-in mechanisms against replay attacks
 - **Tampering Detection**: Automatic detection of modified QR codes
+
+### 📦 Dual Format Support
+- **Automatic Detection**: Transparently reads both the compact (CBOR + Base45) and legacy (JSON + Base64) payload formats emitted by `secure_qr_generator`
+- **No Configuration Needed**: Format detection happens per-payload, based on its character set — nothing to toggle
+- **Safe Fallback**: Automatically retries with the other format if a structural decode failure suggests misdetection
 
 ### 🎯 Business Rules
 - **Flexible Rules Engine**: Define custom validation logic
@@ -46,7 +52,7 @@ A robust Flutter package for validating secure QR codes with battle-tested encry
 
 ```yaml
 dependencies:
-  secure_qr_validator: ^1.1.0
+  secure_qr_validator: ^1.2.0
 ```
 
 2. Install packages:
@@ -77,7 +83,8 @@ final validator = SecureQRValidator(
   ),
 );
 
-// Perform validation
+// Perform validation — works the same whether the scanned QR code was
+// produced in the legacy or the compact format; detection is automatic.
 try {
   final result = await validator.validateQRPayload(qrCodeContent);
   
@@ -129,6 +136,23 @@ final validator = SecureQRValidator(
   ],
 );
 ```
+
+## Format Compatibility
+
+Since version 1.2.0, `validateQRPayload` accepts QR codes in either of the two formats `secure_qr_generator` can emit, without any configuration change:
+
+| | Legacy format | Compact format |
+|---|---|---|
+| Emitted by generator when | `payloadFormat: legacy` (default) | `payloadFormat: compact` |
+| Serialization | JSON | CBOR |
+| Encoding | Base64 | Base45 |
+| Detected via | Presence of lowercase letters / `+` / `/` / `=` | Base45 alphabet only (digits, uppercase, `$%*+-./:`) |
+
+You don't need to know which format a given QR code was generated with — `validateQRPayload` figures it out from the payload itself and decodes accordingly. `ValidatorConfig` (secret key, encryption/signature flags, expiration handling) applies uniformly to both.
+
+### Rollout ordering
+
+If you're migrating a fleet of generators from `legacy` to `compact` (for example, in a peer-to-peer scanning setup where devices scan each other), **upgrade every validator to 1.2.0+ first**. Only once that's done should any generator start emitting `compact` — a validator on 1.1.x or earlier does not understand the compact format and will fail to read those QR codes. See the `secure_qr_generator` README for the generator-side rollout guidance.
 
 ## Advanced Usage
 
@@ -279,6 +303,8 @@ try {
 }
 ```
 
+`ValidationErrorType.decoding` / `.format` / `.decryption` can surface from either format's decode path — check `result.error?.type` and `result.error?.message` if you need to distinguish which stage failed for logging purposes.
+
 ## Best Practices
 
 ### Security
@@ -298,9 +324,9 @@ try {
 ### Integration
 
 - Use dependency injection for validator instances
-- Add logging for security events
+- Add logging for security events, including `result.error?.type` on failed validations — this is the fastest way to distinguish a genuinely invalid QR code from a format-detection or rollout-ordering issue
 - Use type-safe data access
-- Write comprehensive tests
+- Write comprehensive tests covering both payload formats if your generators haven't fully migrated to `compact` yet
 
 ### Handling Expired QR Codes
 
